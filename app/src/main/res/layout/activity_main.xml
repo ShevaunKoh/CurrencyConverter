@@ -30,4 +30,13 @@
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/bottom_nav_menu" />
 
+    <AutoCompleteTextView
+        android:id="@+id/CurrencyAutoComplete"
+        android:layout_width="324dp"
+        android:layout_height="59dp"
+        android:layout_marginTop="64dp"
+        android:hint="Country"
+        app:layout_constraintTop_toBottomOf="@+id/message"
+        tools:layout_editor_absoluteX="16dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
