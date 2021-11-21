@@ -4,7 +4,6 @@ Code Architecture:
 Further Improvements:
 - Due to the lack of time, I wasn't able to implement various functions but have chosen to implement the most basic and required function which is to be able to get the exchange rate of the selected currency
 - Future enhancements could include:
-	- History of selected currencies for user to determine if it's a good rate to exchange currency
 	- Being able to search for currencies instead of scrolling through a dropdown
 	- Defaulting the currency based on locale
 	- Listing of all currencies so that the user is able to compare

@@ -1,5 +1,6 @@
 package com.example.currencyconverter;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -16,6 +17,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.currencyconverter.adapters.CommonFunctions;
 import com.example.currencyconverter.adapters.CountryItemAdapter;
 import com.example.currencyconverter.model.Country;
+import com.example.currencyconverter.model.CurrencyRangeResult;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -28,6 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import static com.example.currencyconverter.Constants.GET_COUNTRIES_API;
+import static com.example.currencyconverter.Constants.getCurrencyRangeAPIString;
 import static com.example.currencyconverter.Constants.getExchangeRateAPIString;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private Spinner sp_CurrencyNameToSpinner;
     private EditText et_CurrencyAmtFromEditText;
     private EditText et_CurrencyAmtToEditText;
+    private LineChart ct_LineChart;
     ArrayList<Country> ListOfCurrency = new ArrayList<>();
 
     // Initialise selected Variables from user inputs
@@ -81,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
         sp_CurrencyNameToSpinner = (Spinner) findViewById(R.id.CurrencyNameToSpinner);
         et_CurrencyAmtFromEditText = (EditText) findViewById(R.id.CurrencyAmtFromEditText);
         et_CurrencyAmtToEditText = (EditText) findViewById(R.id.CurrencyAmtToEditText);
+        ct_LineChart = (LineChart) findViewById(R.id.chart1);
         new getAllCountries().execute(GET_COUNTRIES_API);
 
         sp_CurrencyNameFromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -98,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set Label for display
                     tv_CurrencyNameFromLabel.setText(String.format("1 %s equals", ListOfCurrency.get(pos).getCurrencyName()));
+                    new getCurrencyRange().execute(getCurrencyRangeAPIString(SelectedCurrencyCodeFrom,SelectedCurrencyCodeTo));
 
                     updateExchangeRate();
                     // Toast.makeText(MainActivity.this, "Code: " + SelectedCurrencyCodeFrom, Toast.LENGTH_LONG).show();
@@ -124,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set Label for display
                     SelectedCurrencyNameTo=ListOfCurrency.get(pos).getCurrencyName();
+                    new getCurrencyRange().execute(getCurrencyRangeAPIString(SelectedCurrencyCodeFrom,SelectedCurrencyCodeTo));
 
                     updateExchangeRate();
                     // Toast.makeText(MainActivity.this, "Code: " + SelectedCurrencyCodeTo, Toast.LENGTH_LONG).show();
@@ -328,6 +340,109 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+    }
+
+
+    // Get list of Countries for Chart
+    protected class getCurrencyRange extends AsyncTask<String, Void, String> {
+        @Override
+        public String doInBackground(String... url) {
+
+            try {
+                URL Url = new URL(url[0]);
+                URLConnection urlConnection = Url.openConnection();
+                InputStream inputStream = urlConnection.getInputStream();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                String str = "";
+                str = bufferedReader.readLine();
+                return str;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+
+            ArrayList<CurrencyRangeResult> CurrencyRangeList = new ArrayList<CurrencyRangeResult>();
+            CurrencyRangeList = CommonFunctions.GetCurrencyRangeFromJson(result);
+            if(CurrencyRangeList.size()<1){
+                return;
+            }
+
+            ArrayList<Entry> values = new ArrayList<>();
+            for (int i = 0; i < CurrencyRangeList.size(); i++) {
+                // Add to Graph values
+                values.add(new Entry(i, CurrencyRangeList.get(i).getCurrency()));
+            }
+
+
+            // Set up Graph
+            LineDataSet set1 = new LineDataSet(values, CurrencyRangeList.get(0).getCurrencyDate() + " - " +CurrencyRangeList.get(CurrencyRangeList.size()-1).getCurrencyDate());
+            set1.setLineWidth(1.75f);
+            set1.setCircleRadius(5f);
+            set1.setCircleHoleRadius(2.5f);
+            set1.setColor(Color.WHITE);
+            set1.setCircleColor(Color.WHITE);
+            set1.setHighLightColor(Color.WHITE);
+            set1.setDrawValues(true);
+            set1.setValueTextColor(Color.WHITE);
+
+            // Create Line Data
+            LineData data = new LineData(set1);
+
+            setupChart(ct_LineChart, data, Color.rgb(46, 183, 232));
+        }
+    }
+
+    private void setupChart(LineChart chart, LineData data, int color) {
+
+        ((LineDataSet) data.getDataSetByIndex(0)).setCircleHoleColor(color);
+
+        // no description text
+        chart.getDescription().setEnabled(false);
+
+        // chart.setDrawHorizontalGrid(false);
+        //
+        // enable / disable grid background
+        chart.setDrawGridBackground(false);
+//        chart.getRenderer().getGridPaint().setGridColor(Color.WHITE & 0x70FFFFFF);
+
+        // enable touch gestures
+        chart.setTouchEnabled(true);
+
+        // enable scaling and dragging
+        chart.setDragEnabled(true);
+        chart.setScaleEnabled(true);
+
+        // if disabled, scaling can be done on x- and y-axis separately
+        chart.setPinchZoom(false);
+
+        chart.setBackgroundColor(color);
+
+        // set custom chart offsets (automatic offset calculation is hereby disabled)
+        chart.setViewPortOffsets(10, 0, 10, 0);
+
+        // add data
+        chart.setData(data);
+
+        // get the legend (only possible after setting data)
+        Legend l = chart.getLegend();
+        l.setEnabled(false);
+
+        chart.getAxisLeft().setEnabled(false);
+        chart.getAxisLeft().setSpaceTop(40);
+        chart.getAxisLeft().setSpaceBottom(40);
+        chart.getAxisRight().setEnabled(false);
+
+        chart.getXAxis().setEnabled(false);
+
+        // animate calls invalidate()...
+        chart.animateX(2500);
     }
 
 }

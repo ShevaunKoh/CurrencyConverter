@@ -1,5 +1,9 @@
 package com.example.currencyconverter;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class Constants {
     private static final String API_KEY="887d3dcdafeec1255d74";
     private static final String API_URL = "https://free.currconv.com/api/v7/";
@@ -25,4 +29,14 @@ public class Constants {
         return GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra";
     }
 
+    // Get API URL for getting past 8 days currency
+    public static String getCurrencyRangeAPIString(String CurrencyFrom, String CurrencyTo){
+        Calendar calendar = Calendar.getInstance(); // this would default to now
+        SimpleDateFormat DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date CurrentDate= calendar.getTime();
+        calendar.add(Calendar.DAY_OF_YEAR, -7);
+        Date newDate = calendar.getTime();
+        //  Log.i("getExchangeRateAPI", GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra");
+        return GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra&date="+DateFormat.format(newDate)+"&endDate="+DateFormat.format(CurrentDate);
+    }
 }

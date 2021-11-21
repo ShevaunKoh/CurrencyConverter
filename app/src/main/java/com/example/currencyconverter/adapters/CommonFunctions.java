@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.example.currencyconverter.model.Country;
 import com.example.currencyconverter.model.CountryResult;
+import com.example.currencyconverter.model.CurrencyRangeResult;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -67,5 +68,31 @@ public class CommonFunctions {
             Log.e("GetExchangeRateFromJson", "GetExchangeRateFromJson: ", e);
         }
         return ExchangeRate;
+    }
+
+
+    public static ArrayList<CurrencyRangeResult> GetCurrencyRangeFromJson(String jsonString){
+        Gson gson = new Gson();
+        Map<String, Map<String, Float>> CurrencyRangeMap;
+        ArrayList<CurrencyRangeResult> CurrencyRangeList = new ArrayList<CurrencyRangeResult>();
+
+        try{
+            // Cast json into CountryResult Object
+             Log.i("GetCurrencyRgFromJson", "Json: "+ jsonString);
+            CurrencyRangeMap = gson.fromJson(jsonString, new TypeToken<Map<String, Map<String, Float>>>(){}.getType());
+
+            // Foreach Hashmap entry in results, add to CurrencyRangeList
+            for (Map.Entry<String, Map<String, Float>> entry : CurrencyRangeMap.entrySet()) {
+                // Loop thru CurrencyRange keys
+                for (Map.Entry<String, Float> CurrencyRange : entry.getValue().entrySet()) {
+                    // Loop thru CurrencyRange
+                    CurrencyRangeList.add(new CurrencyRangeResult(CurrencyRange.getKey(),CurrencyRange.getValue()));
+                }
+            }
+
+        } catch(Exception e){
+            Log.e("GetCurrencyRgFromJson", "GetCurrencyRangeFromJson: ", e);
+        }
+        return CurrencyRangeList;
     }
 }

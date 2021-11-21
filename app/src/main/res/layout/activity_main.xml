@@ -87,7 +87,20 @@
             android:layout_marginTop="10dp"
             android:textSize="30sp"
             app:layout_constraintTop_toBottomOf="@+id/CurrencyNameFromLabel" />
+        <TextView
+            android:id="@+id/GraphLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:textSize="15sp"
+            android:text="@string/exchange_rate_for_the_past_week"
+            app:layout_constraintTop_toBottomOf="@+id/CurrencyNameToLabel" />
 
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="5dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
