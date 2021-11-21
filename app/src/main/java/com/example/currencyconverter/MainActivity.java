@@ -46,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     String SelectedCurrencyCodeFrom="", SelectedCurrencyCodeTo="", SelectedCurrencyNameTo="";
     double CurrencyAmtFrom=0, CurrencyAmtTo=0;
     Float ExchangeRateResult=new Float(0);
-    boolean sysChanged=false;
+    boolean sysChanged=false; // Indicate system Changes
+    boolean sysCurrencyTo=true; // Indicate if conversion is from To
 
 
 /*    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -93,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set Currency From Amt to 0 for updates from exchange rate
                     CurrencyAmtTo=0;
+                    sysCurrencyTo=false;
 
                     // Set Label for display
                     tv_CurrencyNameFromLabel.setText(String.format("1 %s equals", ListOfCurrency.get(pos).getCurrencyName()));
@@ -108,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
         sp_CurrencyNameToSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
+
                 //Get selected currency
                 if(pos != -1){
                     SelectedCurrencyCodeTo = ListOfCurrency.get(pos).getCurrencyCode();
@@ -117,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set Currency From Amt to 0 for updates from exchange rate
                     CurrencyAmtTo=0;
+                    sysCurrencyTo=false;
 
                     // Set Label for display
                     SelectedCurrencyNameTo=ListOfCurrency.get(pos).getCurrencyName();
@@ -142,9 +146,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-                Log.i("onTextChanged", "et_CurrencyAmtFromEditText sysChange: "+sysChanged);
                 // Get Currency To Amt
-
                 if(!sysChanged && et_CurrencyAmtFromEditText.hasFocus()){
                     if(et_CurrencyAmtFromEditText.getText().toString().isEmpty()){
                         CurrencyAmtFrom=0;
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // Set Currency From Amt to 0 for updates from exchange rate
                     CurrencyAmtTo=0;
+                    sysCurrencyTo=false;
 
                     updateExchangeRate();
                 } else{
@@ -166,24 +169,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-
-                Log.i("onTextChanged", "et_CurrencyAmtToEditText sysChange: "+sysChanged);
-
-                if(!sysChanged && et_CurrencyAmtToEditText.hasFocus()){
-                    // Get Currency To Amt
-                    if(et_CurrencyAmtToEditText.getText().toString().isEmpty()){
-                        CurrencyAmtTo=0;
-                    }else{
-                        CurrencyAmtTo=Double.parseDouble(et_CurrencyAmtToEditText.getText().toString());
-                    }
-
-                    // Set Currency From Amt to 0 for updates from exchange rate
-                    CurrencyAmtFrom=0;
-
-                    updateExchangeRate();
-                } else{
-                    sysChanged=false;
-                }
             }
 
             @Override
@@ -193,6 +178,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
+                if(!sysChanged && et_CurrencyAmtToEditText.hasFocus()){
+                    Log.i("onTextChanged", "et_CurrencyAmtToEditText in if");
+                    // Get Currency To Amt
+                    if(et_CurrencyAmtToEditText.getText().toString().isEmpty()){
+                        CurrencyAmtTo=0;
+                    }else{
+                        CurrencyAmtTo=Double.parseDouble(et_CurrencyAmtToEditText.getText().toString());
+                    }
+
+                    // Set Currency From Amt to 0 for updates from exchange rate
+                    CurrencyAmtFrom=0;
+                    sysCurrencyTo=true;
+
+                    updateExchangeRate();
+                } else{
+                    sysChanged=false;
+                }
             }
         });
 
@@ -208,13 +210,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if(CurrencyAmtFrom!=0){
+        if(!sysCurrencyTo){
             // To get exchange rate --> From - To
+            Log.i("onTextChanged", "updateExchangeRate from");
             new getExchangeRate().execute(getExchangeRateAPIString(SelectedCurrencyCodeFrom,SelectedCurrencyCodeTo));
             return;
         }
-        if(CurrencyAmtTo!=0){
+        if(sysCurrencyTo){
             // To get exchange rate --> To - From (only from Edittext updates)
+            Log.i("onTextChanged", "updateExchangeRate to");
             new getExchangeRate().execute(getExchangeRateAPIString(SelectedCurrencyCodeTo,SelectedCurrencyCodeFrom));
         }
     }
@@ -309,13 +313,15 @@ public class MainActivity extends AppCompatActivity {
             // Log.i("getExchangeRate", "ExchangeRate: "+ ExchangeRateResult);
             sysChanged=true;
             DecimalFormat df = new DecimalFormat("#.##");
-            if(CurrencyAmtFrom!=0){
+            if(!sysCurrencyTo){
+                Log.i("onTextChanged", "onPostExecute from");
                 CurrencyAmtTo=ExchangeRateResult*CurrencyAmtFrom;
                 et_CurrencyAmtToEditText.setText(df.format(CurrencyAmtTo));
                 tv_CurrencyNameToLabel.setText(String.format("%s %s", ExchangeRateResult, SelectedCurrencyNameTo));
                 return;
             }
-            if(CurrencyAmtTo!=0){
+            if(sysCurrencyTo){
+                Log.i("onTextChanged", "onPostExecute to");
                 CurrencyAmtFrom=ExchangeRateResult*CurrencyAmtTo;
                 et_CurrencyAmtFromEditText.setText(df.format(CurrencyAmtFrom));
                 // tv_CurrencyNameToLabel.setText(String.format("%s %s", ExchangeRateResult, SelectedCurrencyNameTo));
