@@ -4,12 +4,12 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Country> ListOfCurrency = new ArrayList<>();
 
     // Initialise selected Variables from user inputs
-    String SelectedCurrencyCodeFrom="", SelectedCurrencyCodeTo="";
+    String SelectedCurrencyCodeFrom="", SelectedCurrencyCodeTo="", SelectedCurrencyNameTo="";
     double CurrencyAmtFrom=0, CurrencyAmtTo=0;
     Float ExchangeRateResult=new Float(0);
     boolean sysChanged=false;
@@ -89,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
 
                     // Set Currency From Amt
                     CurrencyAmtFrom=Double.parseDouble(et_CurrencyAmtFromEditText.getText().toString());
-                    // Set Currency To Amt to 0 for updates from exchange rate
+
+                    // Set Currency From Amt to 0 for updates from exchange rate
                     CurrencyAmtTo=0;
 
                     // Set Label for display
@@ -109,13 +111,16 @@ public class MainActivity extends AppCompatActivity {
                 //Get selected currency
                 if(pos != -1){
                     SelectedCurrencyCodeTo = ListOfCurrency.get(pos).getCurrencyCode();
-                    // Get Currency To Amt
-                    CurrencyAmtTo=Double.parseDouble(et_CurrencyAmtToEditText.getText().toString());
+
+                    // Set Currency From Amt
+                    CurrencyAmtFrom=Double.parseDouble(et_CurrencyAmtFromEditText.getText().toString());
+
                     // Set Currency From Amt to 0 for updates from exchange rate
-                    CurrencyAmtFrom=0;
+                    CurrencyAmtTo=0;
 
                     // Set Label for display
-                    tv_CurrencyNameToLabel.setText(ListOfCurrency.get(pos).getCurrencyName());
+                    SelectedCurrencyNameTo=ListOfCurrency.get(pos).getCurrencyName();
+
                     updateExchangeRate();
                     // Toast.makeText(MainActivity.this, "Code: " + SelectedCurrencyCodeTo, Toast.LENGTH_LONG).show();
                 }
@@ -136,8 +141,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                Log.i("onTextChanged", "et_CurrencyAmtFromEditText sysChange: "+sysChanged);
                 // Get Currency To Amt
-                if(!sysChanged){
+
+                if(!sysChanged && et_CurrencyAmtFromEditText.hasFocus()){
                     if(et_CurrencyAmtFromEditText.getText().toString().isEmpty()){
                         CurrencyAmtFrom=0;
                     }else{
@@ -147,8 +155,9 @@ public class MainActivity extends AppCompatActivity {
                     CurrencyAmtTo=0;
 
                     updateExchangeRate();
+                } else{
+                    sysChanged=false;
                 }
-                sysChanged=false;
 
             }
         });
@@ -156,15 +165,11 @@ public class MainActivity extends AppCompatActivity {
         et_CurrencyAmtToEditText.addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) {
 
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+                Log.i("onTextChanged", "et_CurrencyAmtToEditText sysChange: "+sysChanged);
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(!sysChanged){
+                if(!sysChanged && et_CurrencyAmtToEditText.hasFocus()){
                     // Get Currency To Amt
                     if(et_CurrencyAmtToEditText.getText().toString().isEmpty()){
                         CurrencyAmtTo=0;
@@ -176,26 +181,40 @@ public class MainActivity extends AppCompatActivity {
                     CurrencyAmtFrom=0;
 
                     updateExchangeRate();
+                } else{
+                    sysChanged=false;
                 }
-                sysChanged=false;
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
             }
         });
 
     }
     public void updateExchangeRate() {
-        Toast.makeText(MainActivity.this, "Code: " + Double.toString(CurrencyAmtFrom)+ Double.toString(CurrencyAmtTo), Toast.LENGTH_LONG).show();
+        // Toast.makeText(MainActivity.this, "Code: " + Double.toString(CurrencyAmtFrom)+ Double.toString(CurrencyAmtTo), Toast.LENGTH_LONG).show();
         if(SelectedCurrencyCodeFrom.isEmpty()||SelectedCurrencyCodeTo.isEmpty()){
+            // A Currency is empty - To skip
             return;
         }
         if(CurrencyAmtFrom==0 && CurrencyAmtTo==0){
+            // No Amt on both from and to - To skip
             return;
         }
 
         if(CurrencyAmtFrom!=0){
+            // To get exchange rate --> From - To
             new getExchangeRate().execute(getExchangeRateAPIString(SelectedCurrencyCodeFrom,SelectedCurrencyCodeTo));
             return;
         }
         if(CurrencyAmtTo!=0){
+            // To get exchange rate --> To - From (only from Edittext updates)
             new getExchangeRate().execute(getExchangeRateAPIString(SelectedCurrencyCodeTo,SelectedCurrencyCodeFrom));
         }
     }
@@ -289,15 +308,17 @@ public class MainActivity extends AppCompatActivity {
             ExchangeRateResult = CommonFunctions.GetExchangeRateFromJson(result);
             // Log.i("getExchangeRate", "ExchangeRate: "+ ExchangeRateResult);
             sysChanged=true;
+            DecimalFormat df = new DecimalFormat("#.##");
             if(CurrencyAmtFrom!=0){
                 CurrencyAmtTo=ExchangeRateResult*CurrencyAmtFrom;
-                et_CurrencyAmtToEditText.setText(Double.toString(CurrencyAmtTo));
+                et_CurrencyAmtToEditText.setText(df.format(CurrencyAmtTo));
+                tv_CurrencyNameToLabel.setText(String.format("%s %s", ExchangeRateResult, SelectedCurrencyNameTo));
                 return;
             }
             if(CurrencyAmtTo!=0){
                 CurrencyAmtFrom=ExchangeRateResult*CurrencyAmtTo;
-                et_CurrencyAmtFromEditText.setText(Double.toString(CurrencyAmtFrom));
-                tv_CurrencyNameToLabel.setText(String.format("%s %s", ExchangeRateResult, tv_CurrencyNameToLabel.getText().toString()));
+                et_CurrencyAmtFromEditText.setText(df.format(CurrencyAmtFrom));
+                // tv_CurrencyNameToLabel.setText(String.format("%s %s", ExchangeRateResult, SelectedCurrencyNameTo));
             }
 
         }

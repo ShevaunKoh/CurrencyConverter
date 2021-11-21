@@ -1,7 +1,5 @@
 package com.example.currencyconverter;
 
-import android.util.Log;
-
 public class Constants {
     private static final String API_KEY="887d3dcdafeec1255d74";
     private static final String API_URL = "https://free.currconv.com/api/v7/";
@@ -21,8 +19,9 @@ public class Constants {
     // Check Api usage
     public static final String GET_USAGE_API = "https://free.currconv.com/others/usage?apiKey=" + API_KEY;
 
+    // Get API URL for getting exchange rate
     public static String getExchangeRateAPIString(String CurrencyFrom, String CurrencyTo){
-        Log.i("getExchangeRateAPI", GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra");
+        //  Log.i("getExchangeRateAPI", GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra");
         return GET_EXCHANGE_RATE_API + "&q=" + CurrencyFrom + "_" + CurrencyTo + "&compact=ultra";
     }
 

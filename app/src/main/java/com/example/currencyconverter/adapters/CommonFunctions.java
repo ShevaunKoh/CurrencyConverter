@@ -3,25 +3,15 @@ package com.example.currencyconverter.adapters;
 import android.util.Log;
 
 import com.example.currencyconverter.model.Country;
+import com.example.currencyconverter.model.CountryResult;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CommonFunctions {
-
-    final class CountryResult{
-        public HashMap<String, Country> results;
-
-        public HashMap<String, Country> getResult() {
-            return results;
-        }
-    }
-
-
 
     public static Object GetObjectFromJson(String s, Object o){
         Gson gson = new Gson();
