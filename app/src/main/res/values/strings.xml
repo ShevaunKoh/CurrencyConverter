@@ -2,5 +2,6 @@
     <string name="app_name">CurrencyConverter</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="equal">equals</string>
+    <string name="exchange_rate_for_the_past_week">Exchange rate for the past week</string>
 </resources>
